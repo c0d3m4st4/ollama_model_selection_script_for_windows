@@ -8,7 +8,6 @@ set count=0
 set skip=1  REM Set the number of lines to skip
 set ollama_running=False
 
-REM tasklist.exe /svc /fo list | (find.exe /i "ollama app.exe") >nul && echo;True || echo;False
 tasklist.exe /svc /fo list | (find.exe /i "ollama app.exe") >nul && set ollama_running=True|| set ollama_running=False
 
 if !ollama_running!==True (
@@ -26,7 +25,6 @@ goto :eof
 	echo:
 
 	REM List available models and display them with numbers
-	REM for /f "tokens=1 delims=" %%A in ('ollama list') do (
 	for /f "tokens=1,* delims=	" %%a in ('ollama list') do (
 	    if !skip! GTR 0 (
 	        REM Skip the number of lines defined in "skip" variable
