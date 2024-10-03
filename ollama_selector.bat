@@ -1,11 +1,13 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo Ollama model selector
+echo --- Ollama model selector ---
+echo:
 
-REM Initialize variables
+:: Initialize variables
 set count=0
-set skip=1  REM Set the number of lines to skip
+:: Number of lines to skip from the output
+set skip=1
 set ollama_running=False
 
 tasklist.exe /svc /fo list | (find.exe /i "ollama app.exe") >nul && set ollama_running=True|| set ollama_running=False
@@ -16,18 +18,29 @@ if !ollama_running!==True (
 	CALL :ollama_not_running
 )
 
-REM End of script
+:: End of script
 goto :eof
 
 :ollama_running
+
+	:: Get current ollama version
+	for /f "tokens=4 delims= " %%a in ('ollama -v') do (
+	    set version=%%a
+	)
+
+	:: Trim leading/trailing spaces
+	set version=%version: =%
+
+	echo Current ollama version is %version%
+
 	echo:
 	echo Available models:
 	echo:
 
-	REM List available models and display them with numbers
+	:: List available models and display a numbered menu
 	for /f "tokens=1,* delims=	" %%a in ('ollama list') do (
 	    if !skip! GTR 0 (
-	        REM Skip the number of lines defined in "skip" variable
+	        :: Skip the number of lines defined in "skip" variable
 	        set /a skip-=1
 	    ) else (
 	        if not "%%a"=="" (
@@ -42,15 +55,14 @@ goto :eof
 	    )
 	)
 
-	REM Add an extra option to exit
+	:: Add an extra option to exit
 	echo:
 	echo [0] Exit
 
-	REM Ask the user to choose a model by number
 	echo:
 	set /p choice="Select a model by number: "
 
-	REM Validate the choice
+	:: Validate choice
 	if "%choice%"=="0" (
 	    echo Exiting without selection.
 	    goto :eof
@@ -61,19 +73,20 @@ goto :eof
 	    goto :eof
 	)
 
-	REM Run ollama with the selected model
+	:: Run ollama with the selected model
 	echo Running ollama with model !model[%choice%]!
 	ollama run !model[%choice%]!
 
-        REM Exit after exiting Ollama (/bye)
+        :: Exit after exiting Ollama (/bye)
         goto :eof
 
-	REM Keep the command window open after execution
 	pause
 
 :ollama_not_running
 	echo:
 	echo Ollama is not running. Executing it to get models list. Please wait... 
 	start /B "" "ollama app.exe"
+	:: Timeout to give it time to start or the version number won't get displayed
+	timeout /t 2 /nobreak >nul
 	echo:
 	CALL :ollama_running
